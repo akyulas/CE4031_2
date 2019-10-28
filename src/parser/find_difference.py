@@ -2,6 +2,7 @@ import queue
 import networkx as nx
 from .node_utils import set_output_name, Node
 from networkx.algorithms.similarity import optimize_edit_paths
+import re
 
 def node_match(node_1, node_2):
     return node_1['custom_object'] == node_2['custom_object']
@@ -91,7 +92,17 @@ def get_graph_from_query_plan(query_plan):
     
     return G
     
-def find_difference_between_two_query_plans(old_query_plan, new_query_plan):
+def find_difference_between_two_query_plans(old_query, old_query_plan, new_query, new_query_plan):
+    result = re.search('select(.*)from', old_query)
+    old_query_projections = result.group(1)
+    old_query_projections = old_query_projections.replace("(", "")
+    old_query_projections = old_query_projections.replace(")", "")
+    old_query_projections_set = set([x.strip() for x in old_query_projections.split(',')])
+    result = re.search('select(.*)from', new_query)
+    new_query_projections = result.group(1)
+    new_query_projections = new_query_projections.replace("(", "")
+    new_query_projections = new_query_projections.replace(")", "")
+    new_query_projections_set = set([x.strip() for x in new_query_projections.split(',')])        
     G1 = get_graph_from_query_plan(old_query_plan)
     G2 = get_graph_from_query_plan(new_query_plan)
     generator = optimize_edit_paths(G1, G2, node_match=node_match)
@@ -99,7 +110,15 @@ def find_difference_between_two_query_plans(old_query_plan, new_query_plan):
     print(node_edit_path)
     print(edge_edit_path)
     print(cost)
-    return get_the_difference_in_natural_language(G1, G2, node_edit_path, edge_edit_path, cost)
+    if old_query_projections_set == new_query_projections_set:
+        return get_the_difference_in_natural_language(G1, G2, node_edit_path, edge_edit_path, cost)
+    else:
+        query_difference_string = "Query projections has changed from " + str(old_query_projections_set) + " to " + str(new_query_projections_set) + "."
+        natural_language_difference_string = get_the_difference_in_natural_language(G1, G2, node_edit_path, edge_edit_path, cost)
+        if  natural_language_difference_string == "Nothing has changed!":
+            return query_difference_string
+        else:
+            return query_difference_string + " " + natural_language_difference_string
 
 def get_the_difference_in_natural_language(G1, G2, node_edit_path, edge_edit_path, cost):
     if cost == 0:
