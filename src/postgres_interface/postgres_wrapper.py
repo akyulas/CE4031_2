@@ -1,6 +1,9 @@
 import psycopg2
-from utils.singleton import Singleton
 import json
+try:
+    from utils.singleton import Singleton
+except:
+    from src.utils.singleton import Singleton
 
 class PostgresWrapper(metaclass=Singleton):
     

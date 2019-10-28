@@ -95,7 +95,28 @@ def find_difference_between_two_query_plans(old_query_plan, new_query_plan):
     G1 = get_graph_from_query_plan(old_query_plan)
     G2 = get_graph_from_query_plan(new_query_plan)
     generator = optimize_edit_paths(G1, G2, node_match=node_match)
-    for i in generator:
-        print(i)
+    node_edit_path, edge_edit_path, cost = list(generator)[0]
+    print(node_edit_path)
+    print(edge_edit_path)
+    print(cost)
+    return get_the_difference_in_natural_language(G1, G2, node_edit_path, edge_edit_path, cost)
+
+def get_the_difference_in_natural_language(G1, G2, node_edit_path, edge_edit_path, cost):
+    if cost == 0:
+        return "Nothing has changed!"
+    node_difference_strings = get_node_differences(G1, G2, node_edit_path)
+    node_difference_strings = [node_difference_string for node_difference_string in node_difference_strings if node_difference_string != "N.A."]
+    return " ".join(node_difference_strings)
+
+
+def get_node_differences(G1, G2, node_edit_path):
+    node_differences = []
+    for node in node_edit_path:
+        node_difference = find_difference_between_two_nodes(G1.nodes[node[0]]['custom_object'], G2.nodes[node[1]]['custom_object'])
+        node_differences.append(node_difference)
+    return node_differences
+
+def find_difference_between_two_nodes(node_1, node_2):
+    return node_1.compare_differences(node_2)
 
     

@@ -38,3 +38,26 @@ class Node(object):
         and self.hash_cond == other.hash_cond and self.table_filter == other.table_filter and self.index_cond == other.index_name  \
         and self.merge_cond == other.merge_cond and self.recheck_cond == other.recheck_cond and self.join_filter == other.join_filter \
         and self.subplan_name == other.subplan_name and self.plan_rows == other.plan_rows and self.output_name == other.output_name
+    
+    def compare_differences(self, other):
+        differences = []
+        if self.node_type != other.node_type:
+            difference = str(self.node_type) + " has evolved into " + str(other.node_type)
+            differences.append(difference)
+        if self.relation_name != other.relation_name:
+            difference =  "relation name " + str(self.relation_name) + " has changed into " +  "relation name " + str(other.relation_name)
+            differences.append(difference)
+        if self.table_filter != other.table_filter:
+            difference =  "table filter has changed from " + str(self.table_filter) + " into " + str(other.table_filter)
+            differences.append(difference)
+        if len(differences) == 0:
+            return "N.A."
+        if len(differences) == 1:
+            difference = differences[0]
+            return difference[0].upper() +  difference [1:] + "."
+        else:
+            last_difference = differences[-1]
+            differences_up_to_last = differences[:-1]
+            difference_string = ", ".join(differences_up_to_last)
+            difference_string += " and " + last_difference + "."
+            return difference_string[0].upper() +  difference_string[1:]
