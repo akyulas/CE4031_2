@@ -3,9 +3,20 @@ import networkx as nx
 from .node_utils import set_output_name, Node
 from networkx.algorithms.similarity import optimize_edit_paths
 import re
+import sys
 
 def node_match(node_1, node_2):
     return node_1['custom_object'] == node_2['custom_object']
+
+def node_substitude_cost(node_1, node_2):
+    node_1_object = node_1['custom_object']
+    node_2_object = node_2['custom_object']
+    if node_1_object == node_2_object:
+        return 0
+    elif node_1_object.node_type == node_2_object.node_type:
+        return 0.5
+    return 9223372036854775807
+    
 
 
 def get_graph_from_query_plan(query_plan):
@@ -51,10 +62,6 @@ def get_graph_from_query_plan(query_plan):
             recheck_cond = current_plan['Recheck Cond']
         if 'Join Filter' in current_plan:
             join_filter = current_plan['Join Filter']
-        if 'Actual Rows' in current_plan:
-            actual_rows = current_plan['Actual Rows']
-        if 'Actual Total Time' in current_plan:
-            actual_time = current_plan['Actual Total Time']
         if 'Subplan Name' in current_plan:
             if "returns" in current_plan['Subplan Name']:
                 name = current_plan['Subplan Name']
@@ -105,11 +112,8 @@ def find_difference_between_two_query_plans(old_query, old_query_plan, new_query
     new_query_projections_set = set([x.strip() for x in new_query_projections.split(',')])        
     G1 = get_graph_from_query_plan(old_query_plan)
     G2 = get_graph_from_query_plan(new_query_plan)
-    generator = optimize_edit_paths(G1, G2, node_match=node_match)
+    generator = optimize_edit_paths(G1, G2, node_match=node_match, node_subst_cost=node_substitude_cost)
     node_edit_path, edge_edit_path, cost = list(generator)[0]
-    print(node_edit_path)
-    print(edge_edit_path)
-    print(cost)
     if old_query_projections_set == new_query_projections_set:
         return get_the_difference_in_natural_language(G1, G2, node_edit_path, edge_edit_path, cost)
     else:
@@ -130,12 +134,71 @@ def get_the_difference_in_natural_language(G1, G2, node_edit_path, edge_edit_pat
 
 def get_node_differences(G1, G2, node_edit_path):
     node_differences = []
-    for node in node_edit_path:
+    substitued_nodes = [x for x in node_edit_path if x[0] is not None and x[1] is not None]
+    inserted_nodes = [x for x in node_edit_path if x[0] is None and x[1] is not None]
+    deleted_nodes = [x for x in node_edit_path if x[0] is not None and x[1] is None]
+    print(node_edit_path)
+    print(substitued_nodes)
+    print(inserted_nodes)
+    print(deleted_nodes)
+    for node in substitued_nodes:
         node_difference = find_difference_between_two_nodes(G1.nodes[node[0]]['custom_object'], G2.nodes[node[1]]['custom_object'])
         node_differences.append(node_difference)
+    if len(inserted_nodes) != 0:
+        node_differences.extend(get_the_natural_language_output_for_the_inserted_nodes(G1, G2, substitued_nodes, inserted_nodes))
     return node_differences
 
 def find_difference_between_two_nodes(node_1, node_2):
     return node_1.compare_differences(node_2)
+
+def get_the_natural_language_output_for_the_inserted_nodes(G1, G2, substitued_nodes, inserted_nodes):
+    substitued_nodes_dict = {}
+    for node_val, node_key in substitued_nodes:
+        substitued_nodes_dict[node_key] = node_val
+    insert_nodes_in_G2 = [x[1] for x in inserted_nodes]
+    G2_nodes = list(G2.nodes())
+    G2_nodes.reverse()
+    node_differences = []
+    node_before = None
+    current_inserted_nodes = []
+    for node in G2_nodes:
+        if node in substitued_nodes_dict:
+            if node_before is None:
+                node_before = node
+            else:
+                node_differences.append(get_natural_language_difference_between_two_nodes(G2, node_before, node, current_inserted_nodes))
+                node_before = node
+        if node not in insert_nodes_in_G2:
+            continue
+        elif node != min(insert_nodes_in_G2):
+            current_inserted_nodes.append(node)
+        else:
+            current_inserted_nodes.append(node)
+            node_differences.append(get_natural_language_difference_between_two_nodes(G2, node_before, None, current_inserted_nodes))
+            current_inserted_nodes.clear()
+    return node_differences
+
+
+# def get_natural_language_output_for_the_deleted_nodes(G1, G2, deleted_nodes):
+#     pass
+
+def get_natural_language_difference_between_two_nodes(G2, node_before, node_after, inserted_nodes):
+    prev_node_type = G2.nodes[node_before]['custom_object'].node_type
+    inserted_nodes_type = [G2.nodes[x]['custom_object'].node_type for x in inserted_nodes]
+    if node_after is None:
+        return get_natural_language_connection_between_objects_in_list(inserted_nodes_type) + " get inserted after " + prev_node_type + ". "
+    else:
+        next_node_type = G2.nodes[node_after]['custom_object'].node_type
+        return get_natural_language_connection_between_objects_in_list(inserted_nodes_type) + " get inserted between " + str(prev_node_type) + " and " + str(next_node_type)
+
+def get_natural_language_connection_between_objects_in_list(objects):
+    if len(objects) == 1:
+        return objects[0]
+    else:
+        last_object = objects[-1]
+        objects_up_to_last_object = objects[:-1]
+        natural_language_connection = ", ".join(objects_up_to_last_object)
+        natural_language_connection += " and " + last_object
+        return natural_language_connection
 
     
