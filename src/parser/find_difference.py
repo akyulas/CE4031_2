@@ -15,12 +15,18 @@ def node_substitude_cost(node_1, node_2):
         return 0
     elif node_1_object.node_type == node_2_object.node_type:
         return 0.5
+    elif 'Scan' in node_1_object.node_type and 'Scan' in node_2_object.node_type:
+        return 0.75
+    elif 'Aggregate' in node_1_object.node_type and 'Aggregate' in node_2_object.node_type:
+        return 0.75
+    elif ('Join' in node_1_object.node_type or node_1_object.node_type == 'Nested Loop') and ('Join' in node_2_object.node_type or node_2_object.node_type == 'Nested Loop'):
+        return 0.75
     return 9223372036854775807
     
 
 
 def get_graph_from_query_plan(query_plan):
-    G = nx.Graph()
+    G = nx.DiGraph()
     q = queue.Queue()
     q_node = queue.Queue()
     q.put(query_plan)
@@ -117,7 +123,11 @@ def find_difference_between_two_query_plans(old_query, old_query_plan, new_query
     if old_query_projections_set == new_query_projections_set:
         return get_the_difference_in_natural_language(G1, G2, node_edit_path, edge_edit_path, cost)
     else:
-        query_difference_string = "Query projections has changed from " + str(old_query_projections_set) + " to " + str(new_query_projections_set) + "."
+        old_query_projections_list = list(old_query_projections_set)
+        new_query_projections_list = list(new_query_projections_set)
+        old_query_projections_list.sort()
+        new_query_projections_list.sort()
+        query_difference_string = "Query projections has changed from " + str(old_query_projections_list) + " to " + str(new_query_projections_list) + "."
         natural_language_difference_string = get_the_difference_in_natural_language(G1, G2, node_edit_path, edge_edit_path, cost)
         if  natural_language_difference_string == "Nothing has changed!":
             return query_difference_string
@@ -137,59 +147,118 @@ def get_node_differences(G1, G2, node_edit_path):
     substitued_nodes = [x for x in node_edit_path if x[0] is not None and x[1] is not None]
     inserted_nodes = [x for x in node_edit_path if x[0] is None and x[1] is not None]
     deleted_nodes = [x for x in node_edit_path if x[0] is not None and x[1] is None]
-    print(node_edit_path)
-    print(substitued_nodes)
-    print(inserted_nodes)
-    print(deleted_nodes)
+    join_nodes_for_G2 = [x for x in G2.nodes() if G2.nodes[x]['custom_object'].node_type == "Nested Loop" or "Join" in G2.nodes[x]['custom_object'].node_type]
+    join_nodes_for_G1 = [x for x in G1.nodes() if G1.nodes[x]['custom_object'].node_type == "Nested Loop" or "Join" in G1.nodes[x]['custom_object'].node_type]
     for node in substitued_nodes:
-        node_difference = find_difference_between_two_nodes(G1.nodes[node[0]]['custom_object'], G2.nodes[node[1]]['custom_object'])
+        node_difference = find_difference_between_two_nodes(G1.nodes[node[0]]['custom_object'], G2.nodes[node[1]]['custom_object'], node[0], node[1])
         node_differences.append(node_difference)
     if len(inserted_nodes) != 0:
-        node_differences.extend(get_the_natural_language_output_for_the_inserted_nodes(G1, G2, substitued_nodes, inserted_nodes))
+        node_differences.extend(get_natural_language_output_for_the_inserted_nodes(G2, inserted_nodes, substitued_nodes, join_nodes_for_G2))
+    if len(deleted_nodes) != 0:
+        node_differences.extend(get_natural_language_output_for_the_deleted_nodes(G1, deleted_nodes, substitued_nodes, join_nodes_for_G1))
     return node_differences
 
-def find_difference_between_two_nodes(node_1, node_2):
-    return node_1.compare_differences(node_2)
+def find_difference_between_two_nodes(node_1, node_2, node_1_label, node_2_label):
+    return node_1.compare_differences(node_2, node_1_label, node_2_label)
 
-def get_the_natural_language_output_for_the_inserted_nodes(G1, G2, substitued_nodes, inserted_nodes):
-    substitued_nodes_dict = {}
-    for node_val, node_key in substitued_nodes:
-        substitued_nodes_dict[node_key] = node_val
-    insert_nodes_in_G2 = [x[1] for x in inserted_nodes]
-    G2_nodes = list(G2.nodes())
-    G2_nodes.reverse()
-    node_differences = []
-    node_before = None
-    current_inserted_nodes = []
-    for node in G2_nodes:
-        if node in substitued_nodes_dict:
-            if node_before is None:
-                node_before = node
-            else:
-                node_differences.append(get_natural_language_difference_between_two_nodes(G2, node_before, node, current_inserted_nodes))
-                node_before = node
-        if node not in insert_nodes_in_G2:
+def get_natural_language_output_for_the_inserted_nodes(G2, inserted_nodes, substitued_nodes, join_nodes):
+    difference_list = []
+    inserted_nodes_list = []
+    inserted_nodes_in_G2 = [x[1] for x in inserted_nodes]
+    differences = []
+    substitued_nodes_in_G2 = [x[1] for x in substitued_nodes]
+    for node in list(nx.dfs_postorder_nodes(G2, source=0)):
+        if node in substitued_nodes_in_G2:
             continue
-        elif node != min(insert_nodes_in_G2):
-            current_inserted_nodes.append(node)
+        if node in join_nodes:
+            differences.append(get_natural_language_ouput_for_join_queries(G2, node))
         else:
-            current_inserted_nodes.append(node)
-            node_differences.append(get_natural_language_difference_between_two_nodes(G2, node_before, None, current_inserted_nodes))
-            current_inserted_nodes.clear()
-    return node_differences
+            inserted_nodes_list.append(node)
+            successors_list = list(G2.successors(inserted_nodes_list[0]))
+            if len(successors_list) == 0:
+                successor = None
+            else:
+                successor = successors_list[0]
+            if node == 0:
+                parent = None
+                differences.append(get_natural_language_ouput_between_sucessor_and_parent_for_insertion(G2, successor, parent, inserted_nodes_list))
+                inserted_nodes_list.clear()
+            else:
+                parent = list(G2.predecessors(node))[0]
+                if parent in substitued_nodes_in_G2 or parent in join_nodes:
+                    differences.append(get_natural_language_ouput_between_sucessor_and_parent_for_insertion(G2, successor, parent, inserted_nodes_list))
+                    inserted_nodes_list.clear()
+    return differences
 
 
-# def get_natural_language_output_for_the_deleted_nodes(G1, G2, deleted_nodes):
-#     pass
+def get_natural_language_output_for_the_deleted_nodes(G1, deleted_nodes, substitued_nodes, join_nodes):
+    difference_list = []
+    deleted_nodes_list = []
+    deleted_nodes_in_G1 = [x[0] for x in deleted_nodes]
+    differences = []
+    substitued_nodes_in_G1 = [x[0] for x in substitued_nodes]
+    for node in list(nx.dfs_postorder_nodes(G1, source=0)):
+        if node in substitued_nodes_in_G1:
+            continue
+        else:
+            deleted_nodes_list.append(node)
+            successors_list = list(G1.successors(deleted_nodes_list[0]))
+            if len(successors_list) == 0:
+                successor = None
+            else:
+                successor = successors_list[0]
+            if node == 0:
+                parent = None
+                differences.append(get_natural_language_ouput_between_sucessor_and_parent_for_deletion(G1, successor, parent, deleted_nodes_list))
+                deleted_nodes_list.clear()
+            else:
+                parent = list(G1.predecessors(node))[0]
+                if parent in substitued_nodes or parent in join_nodes:
+                    differences.append(get_natural_language_ouput_between_sucessor_and_parent_for_deletion(G1, successor, parent, deleted_nodes_list))
+                    deleted_nodes_list.clear()
+    return differences
 
-def get_natural_language_difference_between_two_nodes(G2, node_before, node_after, inserted_nodes):
-    prev_node_type = G2.nodes[node_before]['custom_object'].node_type
-    inserted_nodes_type = [G2.nodes[x]['custom_object'].node_type for x in inserted_nodes]
-    if node_after is None:
-        return get_natural_language_connection_between_objects_in_list(inserted_nodes_type) + " get inserted after " + prev_node_type + ". "
-    else:
-        next_node_type = G2.nodes[node_after]['custom_object'].node_type
-        return get_natural_language_connection_between_objects_in_list(inserted_nodes_type) + " get inserted between " + str(prev_node_type) + " and " + str(next_node_type)
+def get_natural_language_output_with_node_type_from_node_index(G, index):
+    node_type = G.nodes[index]['custom_object'].node_type
+    return str(node_type) + " (" + str(index) + ")"
+
+
+def get_natural_language_ouput_for_join_queries(G, join_node_index):
+    successors = list(G.successors(join_node_index))
+    successors_with_node_type = [get_natural_language_output_with_node_type_from_node_index(G, successor) for successor in successors]
+    return get_natural_language_output_with_node_type_from_node_index(G, join_node_index) + " joins " + get_natural_language_connection_between_objects_in_list(successors_with_node_type) + \
+        "and gets inserted."
+    
+
+def get_natural_language_ouput_between_sucessor_and_parent_for_insertion(G2, successor, parent, inserted_nodes):
+    inserted_nodes_with_nodes_type = [get_natural_language_output_with_node_type_from_node_index(G2, index) for index in inserted_nodes]
+    if successor != None and parent != None:
+        return str(get_natural_language_connection_between_objects_in_list(inserted_nodes_with_nodes_type)) + " gets inserted in between " + get_natural_language_output_with_node_type_from_node_index(G2, successor) + " and " + get_natural_language_output_with_node_type_from_node_index(G2, parent) +"."
+    if successor == None and parent == None:
+        return str(get_natural_language_connection_between_objects_in_list(inserted_nodes_with_nodes_type)) + " gets inserted"
+    if successor == None:
+        return str(get_natural_language_connection_between_objects_in_list(inserted_nodes_with_nodes_type)) + " gets inserted before " + get_natural_language_output_with_node_type_from_node_index(G2, parent) + "."
+    return str(get_natural_language_connection_between_objects_in_list(inserted_nodes_with_nodes_type)) + " gets inserted after " + get_natural_language_output_with_node_type_from_node_index(G2, successor) + "."
+
+def get_natural_language_ouput_between_sucessor_and_parent_for_deletion(G1, successor, parent, deleted_nodes):
+    deleted_nodes_with_nodes_type = [get_natural_language_output_with_node_type_from_node_index(G1, index) for index in deleted_nodes]
+    if successor != None and parent != None:
+        return str(get_natural_language_connection_between_objects_in_list(deleted_nodes_with_nodes_type)) + " gets deleted in between " + get_natural_language_output_with_node_type_from_node_index(G1, successor) + " and " + get_natural_language_output_with_node_type_from_node_index(G1, parent) +"."
+    if successor == None and parent == None:
+        return str(get_natural_language_connection_between_objects_in_list(deleted_nodes_with_nodes_type)) + " gets deleted"
+    if successor == None:
+        return str(get_natural_language_connection_between_objects_in_list(deleted_nodes_with_nodes_type)) + " gets deleted before " + get_natural_language_output_with_node_type_from_node_index(G1, parent) + "."
+    return str(get_natural_language_connection_between_objects_in_list(deleted_nodes_with_nodes_type)) + " gets deleted after " + get_natural_language_output_with_node_type_from_node_index(G1, successor) + "."
+    
+
+# def get_natural_language_difference_between_two_nodes_for_deletion(G2, node_before, node_after, deleted_nodes):
+#     prev_node_type = G2.nodes[node_before]['custom_object'].node_type
+#     deleted_nodes_type = [G2.nodes[x]['custom_object'].node_type for x in deleted_nodes]
+#     if node_after is None:
+#         return get_natural_language_connection_between_objects_in_list(deleted_nodes_type) + " get deleted after " + prev_node_type + "."
+#     else:
+#         next_node_type = G2.nodes[node_after]['custom_object'].node_type
+#         return get_natural_language_connection_between_objects_in_list(deleted_nodes_type) + " get deleted between " + str(prev_node_type) + " and " + str(next_node_type)
 
 def get_natural_language_connection_between_objects_in_list(objects):
     if len(objects) == 1:

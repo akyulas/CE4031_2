@@ -39,17 +39,64 @@ class Node(object):
         and self.merge_cond == other.merge_cond and self.recheck_cond == other.recheck_cond and self.join_filter == other.join_filter \
         and self.subplan_name == other.subplan_name and self.plan_rows == other.plan_rows and self.output_name == other.output_name
     
-    def compare_differences(self, other):
+    def compare_differences(self, other, original_label, current_label):
         differences = []
-        if self.node_type != other.node_type:
+        difference = "The node with node label " + str(original_label) + " of type " + str(self.node_type) + " gets mapped to new node label " + str(current_label) + " of type " + str(other.node_type)
+        differences.append(difference)
+        if not(self.node_type == other.node_type or ("Scan" in self.node_type and "Scan" in other.node_type) or \
+            ("Aggregate" in self.node_type and "Aggregate" in other.node_type) or ((self.node_type == "Nested Loop" or "Join" in self.node_type)\
+                and (other.node_type == "Nested Loop" or "Join" in other.node_type))):
             difference = str(self.node_type) + " has evolved into " + str(other.node_type)
             differences.append(difference)
-        if self.relation_name != other.relation_name:
-            difference =  "relation name " + str(self.relation_name) + " has changed into " +  "relation name " + str(other.relation_name)
-            differences.append(difference)
-        if self.table_filter != other.table_filter:
-            difference =  "table filter has changed from " + str(self.table_filter) + " into " + str(other.table_filter)
-            differences.append(difference)
+        else:
+            if self.node_type != other.node_type:
+                difference = str(self.node_type) + " has evolved into " + str(other.node_type)
+                differences.append(difference)
+            if self.relation_name != other.relation_name:
+                difference =  "relation name " + str(self.relation_name) + " has changed into " +  "relation name " + str(other.relation_name)
+                differences.append(difference)
+            if self.schema != other.schema:
+                difference = "schema has changed from " + str(self.schema) + " into " + str(other.schema)
+                differences.append(difference)
+            if self.alias != other.alias:
+                difference = "alias has changed from " + str(self.alias) + " into " + str(other.alias)
+                differences.append(difference)
+            if self.group_key != other.group_key:
+                difference = "group key has changed from " + str(self.group_key) + " into " + str(other.group_key)
+                differences.append(difference)
+            if self.sort_key != other.sort_key:
+                difference = "sort key has changed from " + str(self.sort_key) + " into " + str(other.sort_key)
+                differences.append(difference)
+            if self.join_type != other.join_type:
+                difference = "join type has changed from " + str(self.join_type) + " into " + str(other.join_type)
+                differences.append(difference)
+            if self.index_name != other.index_name:
+                difference = "index name has changed from " + str(self.index_name) + " into " + str(other.index_name)
+                differences.append(difference)
+            if self.hash_cond != other.hash_cond:
+                difference = "hash condition has changed from " + str(self.hash_cond) + " into " + str(other.hash_cond)
+                differences.append(difference)
+            if self.table_filter != other.table_filter:
+                difference =  "table filter has changed from " + str(self.table_filter) + " into " + str(other.table_filter)
+                differences.append(difference)
+            if self.index_cond != other.index_cond:
+                difference =  "index condition has changed from " + str(self.index_cond) + " into " + str(other.index_cond)
+                differences.append(difference)
+            if self.merge_cond != other.merge_cond:
+                difference =  "merge condition has changed from " + str(self.merge_cond) + " into " + str(other.merge_cond)
+                differences.append(difference)
+            if self.recheck_cond != other.recheck_cond:
+                difference =  "recheck condition has changed from " + str(self.recheck_cond) + " into " + str(other.recheck_cond)
+                differences.append(difference)
+            if self.join_filter != other.join_filter:
+                difference =  "join filter has changed from " + str(self.join_filter) + " into " + str(other.join_filter)
+                differences.append(difference)
+            if self.subplan_name != other.subplan_name:
+                difference =  "subplan name has changed from " + str(self.subplan_name) + " into " + str(other.subplan_name)
+                differences.append(difference)
+            if self.output_name != other.output_name:
+                difference =  "output name has changed from " + str(self.output_name) + " into " + str(other.output_name)
+                differences.append(difference)
         if len(differences) == 0:
             return "N.A."
         if len(differences) == 1:
