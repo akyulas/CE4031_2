@@ -13,15 +13,36 @@ def node_substitude_cost(node_1, node_2):
     node_2_object = node_2['custom_object']
     if node_1_object == node_2_object:
         return 0
+    elif node_1_object.node_type == node_2_object.node_type and 'Scan'  in node_1_object.node_type and node_1_object.relation_name == node_2_object.relation_name:
+        return 0.25
+    elif node_1_object.node_type == node_2_object.node_type and 'Aggregate' in node_1_object.node_type and node_1_object.group_key == node_2_object.group_key:
+        return 0.25
+    elif node_1_object.node_type == node_2_object.node_type and "Sort" in node_1_object.node_type and node_1_object.sort_key == node_2_object.sort_key:
+        return 0.25
+    elif node_1_object.node_type == node_2_object.node_type and ('Hash Join' in node_1_object.node_type) and node_1_object.hash_cond == node_2_object.hash_cond:
+        return 0.25
+    elif node_1_object.node_type == node_2_object.node_type and ('Merge Join' in node_1_object.node_type) and node_1_object.merge_cond == node_2_object.merge_cond:
+        return 0.25
     elif node_1_object.node_type == node_2_object.node_type:
         return 0.5
+    elif 'Sort' in node_1_object.node_type and 'Sort' in node_2_object.node_type:
+        return 1.0
     elif 'Scan' in node_1_object.node_type and 'Scan' in node_2_object.node_type:
-        return 0.75
+        return 1.0
     elif 'Aggregate' in node_1_object.node_type and 'Aggregate' in node_2_object.node_type:
-        return 0.75
+        return 1.0
     elif ('Join' in node_1_object.node_type or node_1_object.node_type == 'Nested Loop') and ('Join' in node_2_object.node_type or node_2_object.node_type == 'Nested Loop'):
-        return 0.75
+        return 1.0
     return 9223372036854775807
+
+def edge_subt_cost(old_edge_dict, new_edge_dict):
+    old_edge_parent_type = old_edge_dict['parent_type']
+    old_edge_children_type = old_edge_dict['children_type']
+    new_edge_parent_type = new_edge_dict['parent_type']
+    new_ege_children_type = new_edge_dict['children_type']
+    if old_edge_parent_type == new_edge_parent_type and old_edge_children_type == new_ege_children_type:
+        return 0.5
+    return 2.0
     
 
 
@@ -93,7 +114,10 @@ def get_graph_from_query_plan(query_plan):
         G.add_node(current_index, custom_object=current_node)
         
         if parent_index is not None:
-            G.add_edge(parent_index, current_index)
+            parent_type = G.nodes[parent_index]['custom_object'].node_type
+            children_type = current_node.node_type
+
+            G.add_edge(parent_index, current_index, **{'parent_type': str(parent_type), 'children_type': str(children_type)})
 
         if 'Plans' in current_plan:
             for item in current_plan['Plans']:
@@ -118,7 +142,7 @@ def find_difference_between_two_query_plans(old_query, old_query_plan, new_query
     new_query_projections_set = set([x.strip() for x in new_query_projections.split(',')])        
     G1 = get_graph_from_query_plan(old_query_plan)
     G2 = get_graph_from_query_plan(new_query_plan)
-    generator = optimize_edit_paths(G1, G2, node_match=node_match, node_subst_cost=node_substitude_cost)
+    generator = optimize_edit_paths(G1, G2, node_match=node_match, node_subst_cost=node_substitude_cost, edge_subst_cost=edge_subt_cost)
     node_edit_path, edge_edit_path, cost = list(generator)[0]
     if old_query_projections_set == new_query_projections_set:
         return get_the_difference_in_natural_language(G1, G2, node_edit_path, edge_edit_path, cost)
