@@ -1,8 +1,6 @@
 import tkinter as tk
-from PIL import ImageTk, Image
+#from PIL import ImageTk, Image 
 import networkx as nx
-import matplotlib
-matplotlib.use("TkAgg")
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
 import matplotlib.pyplot as plt
 
@@ -14,25 +12,13 @@ LARGE_FONT = ("Verdana",12)
 HEIGHT = 500
 WIDTH = 600
 
-
-
-
-def set_input(textbox, value):
-    textbox.config(state='normal')
-    textbox.delete('1.0', tk.END)
-    textbox.insert(tk.END, value)
-    textbox.config(state='disabled')
-    
-def getQueryPlan(q1,q2,r1,r2):
-    plan = q1 + " paste postgres query plan"
-    plan2 = q2 + " paste postgres query plan"
-    set_input(r1,plan)
-    set_input(r2,plan2)
-    #get query plan code
-    
-    
-    
-
+def makeentry(parent, caption, width=None, **options):
+    tk.Label(parent, text=caption).pack(side="top")
+    entry = tk.Entry(parent)
+    if width:
+        entry.config(width=width)
+    entry.pack(side="top", **options)
+    return entry
 
 
 class SeaofFrames(tk.Tk):
@@ -56,12 +42,9 @@ class SeaofFrames(tk.Tk):
     def show_frame(self, cont):
         frame = self.frames[cont]
         frame.tkraise()
+        
 
-
-
-class HomePage(tk.Frame):
-    title = 'Home Page'
-    
+class BasePage(tk.Frame): 
     def __init__(self, parent, controller):
         tk.Frame.__init__(self, parent)
         
@@ -71,9 +54,6 @@ class HomePage(tk.Frame):
         title_frame.pack(side ='left')
         
      
-       
-
-        
         button = tk.Button(menu_frame, text = "Home Page",
                             command=lambda:controller.show_frame(HomePage))
         button.pack(side = 'left', pady=10,padx=10, fill ='both')
@@ -88,12 +68,46 @@ class HomePage(tk.Frame):
         tk.Label(self, text= self.title, font = LARGE_FONT).pack(pady=10,padx=10)
 
 
+#Home Page
+class HomePage(BasePage):
+    title = 'Home Page'
+    
 
-class QueryPage(HomePage):
+
+    def __init__(self, parent, controller):
+        BasePage.__init__(self, parent, controller)
+        
+        entry_frame = tk.Frame(self, bd=1, relief="solid")
+        entry_frame.place(relx = 0.2, rely =0.2, relwidth = 0.6, relheight=0.6)
+
+        url = makeentry(entry_frame, "Database URL",padx = 10, pady=10, fill ='both')
+        
+        port = makeentry(entry_frame, "Database port",padx = 10, pady=10,fill ='both')
+        
+        name = makeentry(entry_frame, "Database name",padx = 10, pady=10,fill ='both')
+        
+        password = makeentry(entry_frame, "Database password",padx = 10, pady=10,fill ='both')
+        
+        submit_button = tk.Button(entry_frame, text = "Submit").pack(side = 'bottom', pady=10,padx=10)
+        
+        
+        
+        
+#        db_url = tk.Entry(self,)
+
+    
+        
+        
+        
+
+
+
+#Query Page
+class QueryPage(BasePage):
     title = "Query Page"
     
     def __init__(self,parent,controller):
-        HomePage.__init__(self,parent,controller)
+        BasePage.__init__(self,parent,controller)
         
         frame = tk.Frame(self,bg='#900C3F')
         frame.place(relx = 0.05, rely=0.1, relwidth=0.40, relheight=0.85)
@@ -110,6 +124,7 @@ class QueryPage(HomePage):
         textbox = tk.Text(frame,font=40)
         textbox.insert(tk.END,'Query 1')
         textbox.place(relx = q_relx,rely= q_rely, relwidth=q_relwidth, relheight=q_relheight)
+        
         #
         textbox2 = tk.Text(frame2, font=40)
         textbox2.insert(tk.END,'Query 2')
@@ -137,13 +152,27 @@ class QueryPage(HomePage):
         submit = tk.Button(self,text='submit', command=lambda:getQueryPlan(textbox.get("1.0","end-1c"),textbox2.get("1.0","end-1c"),
                                                                            results,results2))
         submit.place(relx=0.5, rely=0.5, relwidth = 0.08, relheight=0.08, anchor='center')
+        
+        def set_input(textbox, value):
+            textbox.config(state='normal')
+            textbox.delete('1.0', tk.END)
+            textbox.insert(tk.END, value)
+            textbox.config(state='disabled')
+            
+        def getQueryPlan(q1,q2,r1,r2):
+            plan1 = q1 + " paste postgres query 1 plan"
+            plan2 = q2 + " paste postgres query 2 plan"
+            set_input(r1,plan1)
+            set_input(r2,plan2)
+            #get query plan code
+            
 
 
 #Query PLan Tree Page
-class QPTPage(HomePage):
+class QPTPage(BasePage):
     title = "Query Tree Page"
     def __init__(self,parent,controller):
-        HomePage.__init__(self,parent,controller)
+        BasePage.__init__(self,parent,controller)
         
         #networkx graph1
         f1 = plt.figure(figsize=(5,5))
