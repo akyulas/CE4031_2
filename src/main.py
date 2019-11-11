@@ -16,7 +16,7 @@ conn = None
 G1 = None
 G2 = None
 
-def makeentry(parent, caption, width=None, **options):
+def makeEntry(parent, caption, width=None, **options):
     tk.Label(parent, text=caption).pack(side="top")
     entry = tk.Entry(parent)
     if width:
@@ -30,17 +30,39 @@ def set_input(textbox, value):
     textbox.delete('1.0', tk.END)
     textbox.insert(tk.END, value)
     textbox.config(state='disabled')
-
-def submitLogin(host, dbname, user, password, port):
-    try:
-        port_no = int(port)
-    except:
-        port_no = None
-    if not port_no:
-        conn, connected = postgres_wrapper.connect_to_postgres_db(host, dbname, user, password)
+	
+def handleDBStatus(connected, db_status):
+    if(connected):
+        db_status.config(text = 'Database Connected',bg = 'green', font = ("Verdana",10))
     else:
-        conn, connected = postgres_wrapper.connect_to_postgres_db(host, dbname, user, password, port_no)
-    
+        tk.messagebox.showerror("Error","Connection failed")
+        db_status.config(text= "Database Disconnected", bg='red', font = ("Verdana",10))
+
+def submitLogin(host, dbname, user, password, port, db_status):
+    empty = False
+    connected = False
+    inputs = {'Database URL' : host, 'Database Name' : dbname, "User": user, "Password" : password}
+    err_msg = ''
+    for key,value in inputs.items():
+        if len(value.strip()) == 0:
+            empty = True
+            err_msg += key + "\n"
+    if(empty):
+        tk.messagebox.showerror("Please fill", err_msg)
+
+    else:
+        try:
+            port_no = int(port)
+        except:
+            port_no = None
+        if not port_no:
+            conn, connected = postgres_wrapper.connect_to_postgres_db(host, dbname, user, password)
+            handleDBStatus(connected,db_status)
+        else:
+            conn, connected = postgres_wrapper.connect_to_postgres_db(host, dbname, user, password, port_no)
+            handleDBStatus(connected,db_status)
+
+ 
 def getQueryPlan(q1,q2,r1):
     old_query = q1
     new_query = q2
@@ -154,27 +176,33 @@ class BasePage(tk.Frame):
 class HomePage(BasePage):
     title = 'Home Page'
 
-
-
     def __init__(self, parent, controller):
         BasePage.__init__(self, parent, controller)
         tk.Label(self, text= self.title, font = LARGE_FONT).pack(pady=10,padx=10)
+
+        
+        db_status = tk.Label(self, text= "Database Disconnected", bg='red', font = ("Verdana",10))
+        db_status.pack(pady = 5, padx = 10)  
+
         entry_frame = tk.Frame(self, bd=1, relief="solid")
         entry_frame.place(relx = 0.2, rely =0.2, relwidth = 0.6, relheight=0.6)
+        
 
-        url = makeentry(entry_frame, "Database URL:",padx = 10, pady=10,fill ='both')
+        url = makeEntry(entry_frame, "Database URL:",padx = 10, pady=10,fill ='both')
        
-        dbname = makeentry(entry_frame, "Database Name:",padx = 10, pady=10,fill ='both')
+        dbname = makeEntry(entry_frame, "Database Name:",padx = 10, pady=10,fill ='both')
         
-        port = makeentry(entry_frame, "Database Port:",padx = 10, pady=10,fill ='both')
+        port = makeEntry(entry_frame, "Database Port (Port 5432 if empty):",padx = 10, pady=10,fill ='both')
         
-        user = makeentry(entry_frame, "User:",padx = 10, pady=10,fill ='both')      
+        user = makeEntry(entry_frame, "User:",padx = 10, pady=10,fill ='both')      
 
-        password = makeentry(entry_frame, "Password:",padx = 10, pady=10,fill ='both')
+        password = makeEntry(entry_frame, "Password:",padx = 10, pady=10,fill ='both')
        
         submit_button = tk.Button(entry_frame, text = "Submit",
-        command = lambda:submitLogin(url.get(), dbname.get(), user.get(),password.get(), port.get())).pack(side = 'bottom', pady=10,padx=10)
+        command = lambda:submitLogin(url.get(), dbname.get(), user.get(),password.get(), port.get(), db_status)).pack(side = 'bottom', pady=10,padx=10)
 		
+		
+	
 		
 
 
