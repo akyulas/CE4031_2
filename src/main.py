@@ -2,11 +2,10 @@ from postgres_interface.postgres_wrapper import PostgresWrapper
 from qt_parser.main_parser import Parser
 import tkinter as tk
 import networkx as nx
-import matplotlib
-matplotlib.use("TkAgg")
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
 import matplotlib.pyplot as plt
-
+import random
+import re
 
 LARGE_FONT = ("Verdana",12)
 HEIGHT = 500
@@ -16,6 +15,15 @@ newParser = Parser()
 conn = None
 G1 = None
 G2 = None
+
+def makeentry(parent, caption, width=None, **options):
+    tk.Label(parent, text=caption).pack(side="top")
+    entry = tk.Entry(parent)
+    if width:
+        entry.config(width=width)
+    entry.pack(side="top", **options)
+    return entry
+
 
 def set_input(textbox, value):
     textbox.config(state='normal')
@@ -37,8 +45,19 @@ def getQueryPlan(q1,q2,r1):
     old_query = q1
     new_query = q2
 
+    old_query = re.sub("\s+" , " ", old_query)
+    new_query = re.sub("\s+" , " ", new_query)
+
+    print(old_query)
+    print(new_query)
+
     result_1, success_1 = postgres_wrapper.get_query_plan_of_query(old_query)
     result_2, success_2 = postgres_wrapper.get_query_plan_of_query(new_query)
+
+    print(result_1)
+    print(result_2)
+    print(success_1)
+    print(success_2)
 
     newParser.update_graphs_with_new_query_plans(result_1, result_2)
     plan = newParser.get_difference_between_old_and_new_graphs(old_query, new_query)
@@ -109,8 +128,7 @@ class SeaofFrames(tk.Tk):
 
 
 
-class HomePage(tk.Frame):
-    title = 'Home Page'
+class BasePage(tk.Frame): 
     def __init__(self, parent, controller):
         tk.Frame.__init__(self, parent)
         
@@ -119,6 +137,7 @@ class HomePage(tk.Frame):
         title_frame = tk.Frame(self,  bg='#FF2E00')
         title_frame.pack(side ='left')
         
+     
         button = tk.Button(menu_frame, text = "Home Page",
                             command=lambda:controller.show_frame(HomePage))
         button.pack(side = 'left', pady=10,padx=10, fill ='both')
@@ -129,73 +148,42 @@ class HomePage(tk.Frame):
         button3 = tk.Button(menu_frame, text = "Query Plan Tree",
                             command=lambda:controller.show_frame(QPTPage))
         button3.pack(side = 'left',pady=10,padx=10,fill='both')
-        tk.Label(self, text= self.title, font = LARGE_FONT).pack(pady=10,padx=10)
         
-        frame1_relx = 0.025 
-        frame1_rely = 0.075
-        frame1_relwidth = 0.95
-        frame1_relheight = 0.95
-        frame = tk.Frame(self,bg='#900C3F')
-        frame.place(relx = frame1_relx, rely=frame1_rely, relwidth=frame1_relwidth, relheight=frame1_relheight)
-
-        q1_relx = 0.025
-        q1_rely = 0.25
-        q_relwidth = 0.95
-        q_relheight = 0.1
-
-        hosttext = tk.Text(frame,font=40)
-        hosttext.insert(tk.END,'Host')
-        hosttext.place(relx = q1_relx,rely= q1_rely, relwidth=q_relwidth, relheight=q_relheight)
-
-        q1_relx = 0.025
-        q1_rely = 0.35
-        q_relwidth = 0.95
-        q_relheight = 0.1
-
-        dbnametext = tk.Text(frame,font=40)
-        dbnametext.insert(tk.END,'dbname')
-        dbnametext.place(relx = q1_relx,rely= q1_rely, relwidth=q_relwidth, relheight=q_relheight)
-
-        q1_relx = 0.025
-        q1_rely = 0.45
-        q_relwidth = 0.95
-        q_relheight = 0.1
-
-        usertext = tk.Text(frame,font=40)
-        usertext.insert(tk.END,'user')
-        usertext.place(relx = q1_relx,rely= q1_rely, relwidth=q_relwidth, relheight=q_relheight)
-
-        q1_relx = 0.025
-        q1_rely = 0.55
-        q_relwidth = 0.95
-        q_relheight = 0.1
-
-        passwordtext = tk.Text(frame,font=40)
-        passwordtext.insert(tk.END,'password')
-        passwordtext.place(relx = q1_relx,rely= q1_rely, relwidth=q_relwidth, relheight=q_relheight)
-
-        q1_relx = 0.025
-        q1_rely = 0.65
-        q_relwidth = 0.95
-        q_relheight = 0.1
-
-        porttext = tk.Text(frame,font=40)
-        porttext.insert(tk.END,'port')
-        porttext.place(relx = q1_relx,rely= q1_rely, relwidth=q_relwidth, relheight=q_relheight)
-
-        submit = tk.Button(frame,text='Submit', command=lambda:submitLogin(hosttext.get("1.0","end-1c"),dbnametext.get("1.0","end-1c"),
-                                                                           usertext.get("1.0","end-1c"), passwordtext.get("1.0","end-1c"), porttext.get("1.0","end-1c")))
-        submit.place(relx=0.5, rely=0.8, relwidth = 0.08, relheight=0.08, anchor='center')
+    
+#Home Page
+class HomePage(BasePage):
+    title = 'Home Page'
 
 
 
+    def __init__(self, parent, controller):
+        BasePage.__init__(self, parent, controller)
+        tk.Label(self, text= self.title, font = LARGE_FONT).pack(pady=10,padx=10)
+        entry_frame = tk.Frame(self, bd=1, relief="solid")
+        entry_frame.place(relx = 0.2, rely =0.2, relwidth = 0.6, relheight=0.6)
+
+        url = makeentry(entry_frame, "Database URL:",padx = 10, pady=10,fill ='both')
+       
+        dbname = makeentry(entry_frame, "Database Name:",padx = 10, pady=10,fill ='both')
+        
+        port = makeentry(entry_frame, "Database Port:",padx = 10, pady=10,fill ='both')
+        
+        user = makeentry(entry_frame, "User:",padx = 10, pady=10,fill ='both')      
+
+        password = makeentry(entry_frame, "Password:",padx = 10, pady=10,fill ='both')
+       
+        submit_button = tk.Button(entry_frame, text = "Submit",
+        command = lambda:submitLogin(url.get(), dbname.get(), user.get(),password.get(), port.get())).pack(side = 'bottom', pady=10,padx=10)
+		
+		
 
 
-class QueryPage(HomePage):
+class QueryPage(BasePage):
     title = "Query Page"
     
     def __init__(self,parent,controller):
-        HomePage.__init__(self,parent,controller)
+        BasePage.__init__(self,parent,controller)
+        tk.Label(self, text= self.title, font = LARGE_FONT).pack(pady=10,padx=10)
 
         
         frame1_relx = 0.05 
@@ -246,10 +234,11 @@ class QueryPage(HomePage):
         submit.place(relx=0.5, rely=0.5, relwidth = 0.08, relheight=0.08, anchor='center')
     
 #Query PLan Tree Page
-class QPTPage(HomePage):
+class QPTPage(BasePage):
     title = "Query Tree Page"
     def __init__(self,parent,controller):
-        HomePage.__init__(self,parent,controller)
+        BasePage.__init__(self,parent,controller)
+        tk.Label(self, text= self.title, font = LARGE_FONT).pack(pady=10,padx=10)
         
         #networkx graph1
         self.f1 = plt.figure(figsize=(5,5))

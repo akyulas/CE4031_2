@@ -18,7 +18,6 @@ class Parser(metaclass=Singleton):
     new_graph = nx.DiGraph()
 
     def update_graphs_with_new_query_plans(self, query_plan_1, query_plan_2):
-        print(query_plan_1)
         self.update_graph_from_query_plan(self.old_graph, query_plan_1)
         self.update_graph_from_query_plan(self.new_graph, query_plan_2)
     
@@ -26,23 +25,43 @@ class Parser(metaclass=Singleton):
         return self.old_graph.reverse(), self.new_graph.reverse()
     
     def get_difference_between_old_and_new_graphs(self, old_query, new_query):
-        result = re.search('select(.*)from', old_query)
+        result = re.search('select(.*?)from', old_query, re.IGNORECASE)
         old_query_projections = result.group(1)
-        old_query_projections = old_query_projections.replace("(", "")
-        old_query_projections = old_query_projections.replace(")", "")
-        old_query_projections_set = set([x.strip() for x in old_query_projections.split(',')])
-        result = re.search('select(.*)from', new_query)
+        old_query_projections_list = [x.strip() for x in old_query_projections.split(',')]
+        for i in range(len(old_query_projections_list)):
+            projection = old_query_projections_list[i]
+            open_bracket_count = projection.count("(")
+            closed_bracket_count = projection.count(")")
+            while open_bracket_count > closed_bracket_count:
+                projection = projection.replace('(', '', 1)
+                open_bracket_count = open_bracket_count - 1
+            while closed_bracket_count > open_bracket_count:
+                projection = projection.replace(')', '', 1)
+                closed_bracket_count = closed_bracket_count - 1
+            old_query_projections_list[i] = projection
+        print(old_query_projections_list)
+        old_query_projections_list.sort()
+        result = re.search('select(.*?)from', new_query, re.IGNORECASE)
         new_query_projections = result.group(1)
-        new_query_projections = new_query_projections.replace("(", "")
-        new_query_projections = new_query_projections.replace(")", "")
-        new_query_projections_set = set([x.strip() for x in new_query_projections.split(',')])  
+        new_query_projections_list = [x.strip() for x in new_query_projections.split(',')]
+        for i in range(len(new_query_projections_list)):
+            projection = new_query_projections_list[i]
+            open_bracket_count = projection.count("(")
+            closed_bracket_count = projection.count(")")
+            while open_bracket_count > closed_bracket_count:
+                projection = projection.replace('(', '', 1)
+                open_bracket_count = open_bracket_count - 1
+            while closed_bracket_count > open_bracket_count:
+                projection = projection.replace(')', '', 1)
+                closed_bracket_count = closed_bracket_count - 1
+            new_query_projections_list[i] = projection
+        print(new_query_projections_list)
+        new_query_projections_list.sort()
         generator = optimize_edit_paths(self.old_graph, self.new_graph, node_match=node_match, node_subst_cost=node_substitude_cost, edge_subst_cost=edge_subt_cost)
         node_edit_path, edge_edit_path, cost = list(generator)[0]
-        if old_query_projections_set == new_query_projections_set:
+        if old_query_projections_list == new_query_projections_list:
             return get_the_difference_in_natural_language(self.old_graph, self.new_graph, node_edit_path, edge_edit_path, cost)
         else:
-            old_query_projections_list = list(old_query_projections_set)
-            new_query_projections_list = list(new_query_projections_set)
             old_query_projections_list.sort()
             new_query_projections_list.sort()
             query_difference_string = "Query projections has changed from " + str(old_query_projections_list) + " to " + str(new_query_projections_list) + "."
