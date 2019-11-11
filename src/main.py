@@ -1,14 +1,11 @@
 from postgres_interface.postgres_wrapper import PostgresWrapper
-from parser.find_difference import find_difference_between_two_query_plans
-from parser.parser import Parser
+from qt_parser.main_parser import Parser
 import tkinter as tk
-from PIL import ImageTk, Image
 import networkx as nx
 import matplotlib
 matplotlib.use("TkAgg")
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
 import matplotlib.pyplot as plt
-import random
 
 
 LARGE_FONT = ("Verdana",12)

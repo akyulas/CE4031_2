@@ -1,6 +1,5 @@
 from postgres_interface.postgres_wrapper import PostgresWrapper
-from parsers.find_difference import find_difference_between_two_query_plans
-from parsers.parser import Parser
+from qt_parser.main_parser import Parser
 import tkinter as tk
 import networkx as nx
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
@@ -163,7 +162,7 @@ class HomePage(BasePage):
         password = makeentry(entry_frame, "Password:",padx = 10, pady=10,fill ='both')
        
         submit_button = tk.Button(entry_frame, text = "Submit",
-        command = lambda:submitLogin(url.get(), dbname.get(), port.get(),user.get(),password.get())).pack(side = 'bottom', pady=10,padx=10)
+        command = lambda:submitLogin(url.get(), dbname.get(), user.get(),password.get(), port.get())).pack(side = 'bottom', pady=10,padx=10)
 		
 		
 
