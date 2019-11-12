@@ -147,7 +147,6 @@ def find_difference_between_two_query_plans(old_query, old_query_plan, new_query
             projection = projection.replace(')', '', 1)
             closed_bracket_count = closed_bracket_count - 1
         old_query_projections_list[i] = projection
-    print(old_query_projections_list)
     old_query_projections_list.sort()
     result = re.search('select(.*?)from', new_query, re.IGNORECASE)
     new_query_projections = result.group(1)
@@ -163,7 +162,6 @@ def find_difference_between_two_query_plans(old_query, old_query_plan, new_query
             projection = projection.replace(')', '', 1)
             closed_bracket_count = closed_bracket_count - 1
         new_query_projections_list[i] = projection
-    print(new_query_projections_list)
     new_query_projections_list.sort()      
     G1 = get_graph_from_query_plan(old_query_plan)
     G2 = get_graph_from_query_plan(new_query_plan)
@@ -174,12 +172,12 @@ def find_difference_between_two_query_plans(old_query, old_query_plan, new_query
     else:
         old_query_projections_list.sort()
         new_query_projections_list.sort()
-        query_difference_string = "Query projections has changed from " + str(old_query_projections_list) + " to " + str(new_query_projections_list) + "."
+        query_difference_string = "Query projections has changed from " + str(old_query_projections_list) + " in the old query to " + str(new_query_projections_list) + " in the new query."
         natural_language_difference_string = get_the_difference_in_natural_language(G1, G2, node_edit_path, edge_edit_path, cost)
         if  natural_language_difference_string == "Nothing has changed!":
             return query_difference_string
         else:
-            return query_difference_string + " " + natural_language_difference_string
+            return query_difference_string + "" + natural_language_difference_string
 
 def get_the_difference_in_natural_language(G1, G2, node_edit_path, edge_edit_path, cost):
     if cost == 0:
