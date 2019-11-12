@@ -29,6 +29,7 @@ class PostgresWrapper(metaclass=Singleton):
             cursor.close()
             return result, True
         except Exception as e:
+            self.conn.rollback()
             return str(e), False
 
 
