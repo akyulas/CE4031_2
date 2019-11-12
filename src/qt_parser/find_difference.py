@@ -260,7 +260,7 @@ def get_natural_language_output_for_the_deleted_nodes(G1, deleted_nodes, substit
                 deleted_nodes_list.clear()
             else:
                 parent = list(G1.predecessors(node))[0]
-                if parent in substitued_nodes or parent in join_nodes:
+                if parent in substitued_nodes_in_G1 or parent in join_nodes:
                     differences.append(get_natural_language_ouput_between_sucessor_and_parent_for_deletion(G1, successor, parent, deleted_nodes_list))
                     deleted_nodes_list.clear()
     return differences

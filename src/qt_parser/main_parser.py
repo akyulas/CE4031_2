@@ -39,7 +39,6 @@ class Parser(metaclass=Singleton):
                 projection = projection.replace(')', '', 1)
                 closed_bracket_count = closed_bracket_count - 1
             old_query_projections_list[i] = projection
-        print(old_query_projections_list)
         old_query_projections_list.sort()
         result = re.search('select(.*?)from', new_query, re.IGNORECASE)
         new_query_projections = result.group(1)
@@ -55,7 +54,6 @@ class Parser(metaclass=Singleton):
                 projection = projection.replace(')', '', 1)
                 closed_bracket_count = closed_bracket_count - 1
             new_query_projections_list[i] = projection
-        print(new_query_projections_list)
         new_query_projections_list.sort()
         generator = optimize_edit_paths(self.old_graph, self.new_graph, node_match=node_match, node_subst_cost=node_substitude_cost, edge_subst_cost=edge_subt_cost)
         node_edit_path, edge_edit_path, cost = list(generator)[0]

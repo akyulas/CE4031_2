@@ -44,16 +44,14 @@ class Node(object):
     
     def compare_differences(self, other, original_label, current_label):
         differences = []
-        difference = "The node with node label " + str(original_label) + " of type " + str(self.node_type) + " gets mapped to new node label " + str(current_label) + " of type " + str(other.node_type)
-        differences.append(difference)
         if not(self.node_type == other.node_type or ("Scan" in self.node_type and "Scan" in other.node_type) or \
             ("Aggregate" in self.node_type and "Aggregate" in other.node_type) or ((self.node_type == "Nested Loop" or "Join" in self.node_type)\
                 and (other.node_type == "Nested Loop" or "Join" in other.node_type))):
-            difference = str(self.node_type) + " has evolved into " + str(other.node_type)
+            difference = "The node with node label " + str(original_label) + " of type " + str(self.node_type) + " has evolved into " + str(current_label) + " of type " + str(other.node_type)
             differences.append(difference)
         else:
-            if self.node_type != other.node_type:
-                difference = str(self.node_type) + " has evolved into " + str(other.node_type)
+            if (original_label != current_label or self.node_type != other.node_type):
+                difference = "The node with node label " + str(original_label) + " of type " + str(self.node_type) + " gets mapped to new node label " + str(current_label) + " of type " + str(other.node_type)
                 differences.append(difference)
             if self.relation_name != other.relation_name:
                 difference =  "relation name " + str(self.relation_name) + " has changed into " +  "relation name " + str(other.relation_name)
@@ -104,10 +102,18 @@ class Node(object):
             return "N.A."
         if len(differences) == 1:
             difference = differences[0]
-            return difference[0].upper() +  difference [1:] + ".\n"
+            if (original_label == current_label and self.node_type == other.node_type):
+                return "The node with node label " + str(original_label) + " of type " + str(self.node_type) + " has the following changes: " \
+                    + difference[0] +  difference [1:] + ".\n"
+            else:
+                return difference[0].upper() +  difference [1:] + ".\n"
         else:
             last_difference = differences[-1]
             differences_up_to_last = differences[:-1]
             difference_string = ", ".join(differences_up_to_last)
             difference_string += " and " + last_difference + ".\n"
-            return difference_string[0].upper() +  difference_string[1:]
+            if (original_label == current_label and self.node_type == other.node_type):
+                return "The node with node label " + str(original_label) + " of type " + str(self.node_type) + " has the following changes: " \
+                    + difference_string[0] +  difference_string[1:]
+            else:
+                return difference_string[0].upper() +  difference_string[1:]
