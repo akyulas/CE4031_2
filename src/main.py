@@ -25,7 +25,6 @@ def makeEntry(parent, caption, width=None, **options):
     entry.pack(side="top", **options)
     return entry
 
-
 def set_input(textbox, value):
     textbox.config(state='normal')
     textbox.delete('1.0', tk.END)
@@ -206,7 +205,8 @@ class HomePage(BasePage):
         password = makeEntry(entry_frame, "Password:",padx = 10, pady=10,fill ='both')
        
         submit_button = tk.Button(entry_frame, text = "Submit",
-        command = lambda:submitLogin(url.get(), dbname.get(), user.get(),password.get(), port.get(), db_status)).pack(side = 'bottom', pady=10,padx=10)
+        command = lambda:submitLogin(url.get(), dbname.get(), user.get(),password.get(), port.get(), db_status))
+        submit_button.pack(side = 'bottom', pady=10,padx=10)
 		
 		
 	
@@ -276,29 +276,22 @@ class QPTPage(BasePage):
         BasePage.__init__(self,parent,controller)
         tk.Label(self, text= self.title, font = LARGE_FONT).pack(pady=10,padx=10)
 
+        G1, G2 = newParser.get_graphs_for_visualizations()
+
         #networkx graph1
         self.f1 = plt.figure(figsize=(5,5))
         self.a1 = self.f1.add_subplot(111)
-    
-        G1, G2 = newParser.get_graphs_for_visualizations()
-
         nx.draw_networkx(G1,ax=self.a1)
-        
         self.canvas1 = FigureCanvasTkAgg(self.f1,self)
         self.canvas1.get_tk_widget().pack(side='left', fill =tk.BOTH, expand = True)
 
-
         self.empty_label1 = tk.Label(self, text = "no query plan to show")
-        # self.update_graph_from_query_plan(self.old_graph, query_plan_1)
         self.empty_label1.place(relx = 0.15, rely = 0.5, relwidth = 0.2, relheight=0.1)
 
        
         #networkx graph2
         self.f2 = plt.figure(figsize=(5,5))
         self.a2 = self.f2.add_subplot(111)
-     
-
-        # G2 = nx.gnp_random_graph(10,0.3)
         nx.draw_networkx(G2,ax=self.a2)
         self.canvas2 = FigureCanvasTkAgg(self.f2, self)
         self.canvas2.get_tk_widget().pack(side='left', fill =tk.BOTH, expand = True)
@@ -311,8 +304,6 @@ class QPTPage(BasePage):
         self.a2.clear()
         self.a1.axis('off')
         self.a2.axis('off')
-    
-
       
         G1, G2 = newParser.get_graphs_for_visualizations()
         
@@ -339,8 +330,7 @@ class QPTPage(BasePage):
 
 app = SeaofFrames()
 app.minsize(width = WIDTH, height = HEIGHT)
-
-
+app.title("Group 2 Sem 1 2019")
 
 app.mainloop()
 
