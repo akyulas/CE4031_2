@@ -70,20 +70,23 @@ def getQueryPlan(q1,q2,r1):
     old_query = re.sub("\s+" , " ", old_query)
     new_query = re.sub("\s+" , " ", new_query)
 
-    print(old_query)
-    print(new_query)
-
     result_1, success_1 = postgres_wrapper.get_query_plan_of_query(old_query)
     result_2, success_2 = postgres_wrapper.get_query_plan_of_query(new_query)
 
-    print(result_1)
-    print(result_2)
-    print(success_1)
-    print(success_2)
+    if not success_2 and not success_1:
+        plan = "Both inputs are invalid. Please input valid SQL queries in the textbox."
+        set_input(r1,plan)
+    elif not success_2:
+        plan = "Invalid new query. Please input a valid SQL query."
+        set_input(r1,plan)
+    elif not success_1 :
+        plan = "Invalid old query. Please input a valid SQL query."
+        set_input(r1, plan)
+    else:
+        newParser.update_graphs_with_new_query_plans(result_1, result_2)
+        plan = newParser.get_difference_between_old_and_new_graphs(old_query, new_query)
+        set_input(r1,plan)
 
-    newParser.update_graphs_with_new_query_plans(result_1, result_2)
-    plan = newParser.get_difference_between_old_and_new_graphs(old_query, new_query)
-    set_input(r1,plan)
 
 def hierarchy_pos(G, root, levels=None, width=1., height=1.):
     '''If there is a cycle that is reachable from root, then this will see infinite recursion.
@@ -158,7 +161,6 @@ class BasePage(tk.Frame):
         menu_frame.pack()
         title_frame = tk.Frame(self,  bg='#FF2E00')
         title_frame.pack(side ='left')
-        
      
         button = tk.Button(menu_frame, text = "Home Page",
                             command=lambda:controller.show_frame(HomePage))
