@@ -7,6 +7,7 @@ import matplotlib.pyplot as plt
 import random
 import re
 
+
 LARGE_FONT = ("Verdana",12)
 HEIGHT = 500
 WIDTH = 600
@@ -74,12 +75,15 @@ def getQueryPlan(q1,q2,r1):
     result_2, success_2 = postgres_wrapper.get_query_plan_of_query(new_query)
 
     if not success_2 and not success_1:
+        newParser.update_graphs_with_new_query_plans(None, None)
         plan = "Both inputs are invalid. Please input valid SQL queries in the textbox."
         set_input(r1,plan)
     elif not success_2:
+        newParser.update_graphs_with_new_query_plans(result_1, None)
         plan = "Invalid new query. Please input a valid SQL query."
         set_input(r1,plan)
     elif not success_1 :
+        newParser.update_graphs_with_new_query_plans(None, result_2)
         plan = "Invalid old query. Please input a valid SQL query."
         set_input(r1, plan)
     else:
@@ -147,8 +151,9 @@ class SeaofFrames(tk.Tk):
     
     def show_frame(self, cont):
         frame = self.frames[cont]
+        frame.tkraise()
         if isinstance(frame, QPTPage):
-            frame.refresh()
+            frame.refresh(frame.empty_label1, frame.empty_label2)
         frame.tkraise()
 
 
@@ -266,49 +271,71 @@ class QueryPage(BasePage):
 #Query PLan Tree Page
 class QPTPage(BasePage):
     title = "Query Tree Page"
+    
     def __init__(self,parent,controller):
         BasePage.__init__(self,parent,controller)
         tk.Label(self, text= self.title, font = LARGE_FONT).pack(pady=10,padx=10)
+
         #networkx graph1
         self.f1 = plt.figure(figsize=(5,5))
         self.a1 = self.f1.add_subplot(111)
-
+    
         G1, G2 = newParser.get_graphs_for_visualizations()
-        # G1 = nx.gnp_random_graph(20,0.5)
+
         nx.draw_networkx(G1,ax=self.a1)
+        
         self.canvas1 = FigureCanvasTkAgg(self.f1,self)
         self.canvas1.get_tk_widget().pack(side='left', fill =tk.BOTH, expand = True)
-        
+
+
+        self.empty_label1 = tk.Label(self, text = "no query plan to show")
+        # self.update_graph_from_query_plan(self.old_graph, query_plan_1)
+        self.empty_label1.place(relx = 0.15, rely = 0.5, relwidth = 0.2, relheight=0.1)
+
+       
         #networkx graph2
         self.f2 = plt.figure(figsize=(5,5))
         self.a2 = self.f2.add_subplot(111)
+     
+
         # G2 = nx.gnp_random_graph(10,0.3)
         nx.draw_networkx(G2,ax=self.a2)
-        self.canvas2 = FigureCanvasTkAgg(self.f2,self)
+        self.canvas2 = FigureCanvasTkAgg(self.f2, self)
         self.canvas2.get_tk_widget().pack(side='left', fill =tk.BOTH, expand = True)
+
+        self.empty_label2 = tk.Label(self, text = "no query plan to show")
+        self.empty_label2.place(relx = 0.65, rely = 0.5, relwidth = 0.2, relheight=0.1)
     
-    def refresh(self):
+    def refresh(self,empty_label1,empty_label2):
         self.a1.clear()
         self.a2.clear()
-        plt.ion()
+        self.a1.axis('off')
+        self.a2.axis('off')
+    
 
+      
         G1, G2 = newParser.get_graphs_for_visualizations()
         
-        
-        # G1 = nx.gnp_random_graph(20,0.5)
-        pos_1 = hierarchy_pos(G1.reverse(),0)
-        nx.draw(G1, ax=self.a1, pos=pos_1, with_labels=True)
 
-        # nx.draw_planar(G1,ax=self.a1, with_labels= True)
-        
-        #networkx graph2
-        # G2 = nx.gnp_random_graph(10,0.3)
-        pos_2 = hierarchy_pos(G2.reverse(),0)
-        nx.draw(G2, ax=self.a2, pos=pos_2, with_labels=True)
-        # nx.draw_planar(G2,ax=self.a2, with_labels= True)
+        if (len(G1.nodes()) !=0 ):
+            empty_label1.place_forget()
+            pos_1 = hierarchy_pos(G1.reverse(),0)
+            nx.draw(G1, ax=self.a1, pos=pos_1, with_labels=True)
+            self.canvas1.draw()
+        else:
+            self.canvas1.draw()
+            empty_label1.place(relx = 0.15, rely = 0.5, relwidth = 0.2, relheight=0.1)
 
-        self.canvas1.draw()
-        self.canvas2.draw()
+        if(len(G2.nodes()) !=0):
+            empty_label2.place_forget()
+            pos_2 = hierarchy_pos(G2.reverse(),0)
+            nx.draw(G2, ax=self.a2, pos=pos_2, with_labels=True)
+            self.canvas2.draw()
+
+        else:
+            self.canvas2.draw()
+            empty_label2.place(relx = 0.65, rely = 0.5, relwidth = 0.2, relheight=0.1)
+
 
 app = SeaofFrames()
 app.minsize(width = WIDTH, height = HEIGHT)

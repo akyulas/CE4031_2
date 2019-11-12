@@ -18,9 +18,15 @@ class Parser(metaclass=Singleton):
     new_graph = nx.DiGraph()
 
     def update_graphs_with_new_query_plans(self, query_plan_1, query_plan_2):
-        self.update_graph_from_query_plan(self.old_graph, query_plan_1)
-        self.update_graph_from_query_plan(self.new_graph, query_plan_2)
-    
+        if query_plan_1 is None:
+            self.old_graph.clear()
+        else:
+            self.update_graph_from_query_plan(self.old_graph, query_plan_1)
+        if query_plan_2 is None:
+            self.new_graph.clear()
+        else:
+            self.update_graph_from_query_plan(self.new_graph, query_plan_2)
+     
     def get_graphs_for_visualizations(self):
         return self.old_graph.reverse(), self.new_graph.reverse()
     
