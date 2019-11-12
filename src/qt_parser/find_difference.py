@@ -5,6 +5,9 @@ from networkx.algorithms.similarity import optimize_edit_paths
 import re
 import sys
 
+new_flag = "New"
+old_flag = "Old"
+
 def node_match(node_1, node_2):
     return node_1['custom_object'] == node_2['custom_object']
 
@@ -183,7 +186,7 @@ def get_the_difference_in_natural_language(G1, G2, node_edit_path, edge_edit_pat
         return "Nothing has changed!"
     node_difference_strings = get_node_differences(G1, G2, node_edit_path)
     node_difference_strings = [node_difference_string for node_difference_string in node_difference_strings if node_difference_string != "N.A."]
-    return " ".join(node_difference_strings)
+    return "".join(node_difference_strings)
 
 
 def get_node_differences(G1, G2, node_edit_path):
@@ -215,7 +218,7 @@ def get_natural_language_output_for_the_inserted_nodes(G2, inserted_nodes, subst
         if node in substitued_nodes_in_G2:
             continue
         if node in join_nodes:
-            differences.append(get_natural_language_ouput_for_join_queries(G2, node))
+            differences.append(get_natural_language_ouput_for_join_queries(G2, node, new_flag))
         else:
             inserted_nodes_list.append(node)
             successors_list = list(G2.successors(inserted_nodes_list[0]))
@@ -262,37 +265,37 @@ def get_natural_language_output_for_the_deleted_nodes(G1, deleted_nodes, substit
                     deleted_nodes_list.clear()
     return differences
 
-def get_natural_language_output_with_node_type_from_node_index(G, index):
+def get_natural_language_output_with_node_type_from_node_index(G, index, flag):
     node_type = G.nodes[index]['custom_object'].node_type
-    return str(node_type) + " (" + str(index) + ")"
+    return str(node_type) + " (" + str(index) + "," + flag + ")"
 
 
-def get_natural_language_ouput_for_join_queries(G, join_node_index):
+def get_natural_language_ouput_for_join_queries(G, join_node_index, flag):
     successors = list(G.successors(join_node_index))
-    successors_with_node_type = [get_natural_language_output_with_node_type_from_node_index(G, successor) for successor in successors]
-    return get_natural_language_output_with_node_type_from_node_index(G, join_node_index) + " joins " + get_natural_language_connection_between_objects_in_list(successors_with_node_type) + \
-        " and gets inserted."
+    successors_with_node_type = [get_natural_language_output_with_node_type_from_node_index(G, successor, flag) for successor in successors]
+    return get_natural_language_output_with_node_type_from_node_index(G, join_node_index, flag) + " joins " + get_natural_language_connection_between_objects_in_list(successors_with_node_type) + \
+        " and gets inserted.\n"
     
 
 def get_natural_language_ouput_between_sucessor_and_parent_for_insertion(G2, successor, parent, inserted_nodes):
-    inserted_nodes_with_nodes_type = [get_natural_language_output_with_node_type_from_node_index(G2, index) for index in inserted_nodes]
+    inserted_nodes_with_nodes_type = [get_natural_language_output_with_node_type_from_node_index(G2, index, new_flag) for index in inserted_nodes]
     if successor != None and parent != None:
-        return str(get_natural_language_connection_between_objects_in_list(inserted_nodes_with_nodes_type)) + " gets inserted in between " + get_natural_language_output_with_node_type_from_node_index(G2, successor) + " and " + get_natural_language_output_with_node_type_from_node_index(G2, parent) +"."
+        return str(get_natural_language_connection_between_objects_in_list(inserted_nodes_with_nodes_type)) + " gets inserted in between " + get_natural_language_output_with_node_type_from_node_index(G2, successor, new_flag) + " and " + get_natural_language_output_with_node_type_from_node_index(G2, parent, new_flag) +".\n"
     if successor == None and parent == None:
-        return str(get_natural_language_connection_between_objects_in_list(inserted_nodes_with_nodes_type)) + " gets inserted"
+        return str(get_natural_language_connection_between_objects_in_list(inserted_nodes_with_nodes_type)) + " gets inserted.\n"
     if successor == None:
-        return str(get_natural_language_connection_between_objects_in_list(inserted_nodes_with_nodes_type)) + " gets inserted before " + get_natural_language_output_with_node_type_from_node_index(G2, parent) + "."
-    return str(get_natural_language_connection_between_objects_in_list(inserted_nodes_with_nodes_type)) + " gets inserted after " + get_natural_language_output_with_node_type_from_node_index(G2, successor) + "."
+        return str(get_natural_language_connection_between_objects_in_list(inserted_nodes_with_nodes_type)) + " gets inserted before " + get_natural_language_output_with_node_type_from_node_index(G2, parent, new_flag) + ".\n"
+    return str(get_natural_language_connection_between_objects_in_list(inserted_nodes_with_nodes_type)) + " gets inserted after " + get_natural_language_output_with_node_type_from_node_index(G2, successor, new_flag) + ".\n"
 
 def get_natural_language_ouput_between_sucessor_and_parent_for_deletion(G1, successor, parent, deleted_nodes):
-    deleted_nodes_with_nodes_type = [get_natural_language_output_with_node_type_from_node_index(G1, index) for index in deleted_nodes]
+    deleted_nodes_with_nodes_type = [get_natural_language_output_with_node_type_from_node_index(G1, index, old_flag) for index in deleted_nodes]
     if successor != None and parent != None:
-        return str(get_natural_language_connection_between_objects_in_list(deleted_nodes_with_nodes_type)) + " gets deleted in between " + get_natural_language_output_with_node_type_from_node_index(G1, successor) + " and " + get_natural_language_output_with_node_type_from_node_index(G1, parent) +"."
+        return str(get_natural_language_connection_between_objects_in_list(deleted_nodes_with_nodes_type)) + " gets deleted in between " + get_natural_language_output_with_node_type_from_node_index(G1, successor, old_flag) + " and " + get_natural_language_output_with_node_type_from_node_index(G1, parent, old_flag) +".\n"
     if successor == None and parent == None:
-        return str(get_natural_language_connection_between_objects_in_list(deleted_nodes_with_nodes_type)) + " gets deleted"
+        return str(get_natural_language_connection_between_objects_in_list(deleted_nodes_with_nodes_type)) + " gets deleted.\n"
     if successor == None:
-        return str(get_natural_language_connection_between_objects_in_list(deleted_nodes_with_nodes_type)) + " gets deleted before " + get_natural_language_output_with_node_type_from_node_index(G1, parent) + "."
-    return str(get_natural_language_connection_between_objects_in_list(deleted_nodes_with_nodes_type)) + " gets deleted after " + get_natural_language_output_with_node_type_from_node_index(G1, successor) + "."
+        return str(get_natural_language_connection_between_objects_in_list(deleted_nodes_with_nodes_type)) + " gets deleted before " + get_natural_language_output_with_node_type_from_node_index(G1, parent, old_flag) + ".\n"
+    return str(get_natural_language_connection_between_objects_in_list(deleted_nodes_with_nodes_type)) + " gets deleted after " + get_natural_language_output_with_node_type_from_node_index(G1, successor, old_flag) + ".\n"
     
 
 # def get_natural_language_difference_between_two_nodes_for_deletion(G2, node_before, node_after, deleted_nodes):

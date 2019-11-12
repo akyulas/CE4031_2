@@ -269,7 +269,6 @@ class QPTPage(BasePage):
     def __init__(self,parent,controller):
         BasePage.__init__(self,parent,controller)
         tk.Label(self, text= self.title, font = LARGE_FONT).pack(pady=10,padx=10)
-        
         #networkx graph1
         self.f1 = plt.figure(figsize=(5,5))
         self.a1 = self.f1.add_subplot(111)
@@ -291,6 +290,8 @@ class QPTPage(BasePage):
     def refresh(self):
         self.a1.clear()
         self.a2.clear()
+        plt.ion()
+
         G1, G2 = newParser.get_graphs_for_visualizations()
         
         

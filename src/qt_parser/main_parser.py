@@ -64,12 +64,12 @@ class Parser(metaclass=Singleton):
         else:
             old_query_projections_list.sort()
             new_query_projections_list.sort()
-            query_difference_string = "Query projections has changed from " + str(old_query_projections_list) + " to " + str(new_query_projections_list) + "."
+            query_difference_string = "Query projections has changed from " + str(old_query_projections_list) + " in the old query to " + str(new_query_projections_list) + " in the new query."
             natural_language_difference_string = get_the_difference_in_natural_language(self.old_graph, self.new_graph, node_edit_path, edge_edit_path, cost)
             if  natural_language_difference_string == "Nothing has changed!":
                 return query_difference_string
             else:
-                return query_difference_string + " " + natural_language_difference_string
+                return query_difference_string + "\n" + natural_language_difference_string
 
     def update_graph_from_query_plan(self, G, query_plan):
         G.clear()

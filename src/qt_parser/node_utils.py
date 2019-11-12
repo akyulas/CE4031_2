@@ -1,8 +1,11 @@
 def set_output_name(output_name):
-    if "T" == output_name[0] and output_name[1:].isdigit():
-        output_name = int(output_name[1:])
-    else:
-        output_name = output_name
+    try:
+        if "T" == output_name[0] and output_name[1:].isdigit():
+            output_name = int(output_name[1:])
+        else:
+            output_name = output_name
+    except:
+        output_name = None
     return output_name
 
 class Node(object):
@@ -101,10 +104,10 @@ class Node(object):
             return "N.A."
         if len(differences) == 1:
             difference = differences[0]
-            return difference[0].upper() +  difference [1:] + "."
+            return difference[0].upper() +  difference [1:] + ".\n"
         else:
             last_difference = differences[-1]
             differences_up_to_last = differences[:-1]
             difference_string = ", ".join(differences_up_to_last)
-            difference_string += " and " + last_difference + "."
+            difference_string += " and " + last_difference + ".\n"
             return difference_string[0].upper() +  difference_string[1:]
