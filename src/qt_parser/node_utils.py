@@ -53,7 +53,7 @@ class Node(object):
     
     def compare_differences(self, other, original_label, current_label):
         """
-        This function is ued to comparent differences between two nodes
+        This function is used to compare the differences between two nodes
         """
         differences = []
         if not(self.node_type == other.node_type or ("Scan" in self.node_type and "Scan" in other.node_type) or \
