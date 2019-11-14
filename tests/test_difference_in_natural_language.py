@@ -1,7 +1,12 @@
 from .context import find_difference_between_two_query_plans, PostgresWrapper
 
+host = "localhost"
+DB_NAME = "TPC-H"
+user = "postgres"
+password = "password"
+port=5433
 postgres_wrapper = PostgresWrapper()
-conn = postgres_wrapper.connect_to_postgres_db("localhost", "TPC-H", "postgres", "root", port=5432)
+conn = postgres_wrapper.connect_to_postgres_db(host, DB_NAME, user, password, port=5433)
 
 def test_node_changes_for_table_changes_are_reflected_correctly():
     old_query = "select * from lineitem;"

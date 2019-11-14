@@ -1,4 +1,7 @@
 def set_output_name(output_name):
+    """
+    This function is used to define the output name
+    """
     try:
         if "T" == output_name[0] and output_name[1:].isdigit():
             output_name = int(output_name[1:])
@@ -9,6 +12,9 @@ def set_output_name(output_name):
     return output_name
 
 class Node(object):
+    """
+    Define an object used to represent a node
+    """
     def __init__(self, node_type, relation_name, schema, alias, group_key, sort_key, join_type, index_name, 
             hash_cond, table_filter, index_cond, merge_cond, recheck_cond, join_filter, subplan_name,
             plan_rows, output_name):
@@ -30,7 +36,10 @@ class Node(object):
         self.plan_rows = plan_rows
         self.output_name = output_name
     
-    def __eq__(self, other): 
+    def __eq__(self, other):
+        """
+        This function is used to check if two node types are equal
+        """ 
         if not isinstance(other, Node):
             # don't attempt to compare against unrelated types
             return NotImplemented
@@ -43,6 +52,9 @@ class Node(object):
         and self.subplan_name == other.subplan_name and self.plan_rows == other.plan_rows and self.output_name == other.output_name
     
     def compare_differences(self, other, original_label, current_label):
+        """
+        This function is ued to comparent differences between two nodes
+        """
         differences = []
         if not(self.node_type == other.node_type or ("Scan" in self.node_type and "Scan" in other.node_type) or \
             ("Aggregate" in self.node_type and "Aggregate" in other.node_type) or ((self.node_type == "Nested Loop" or "Join" in self.node_type)\

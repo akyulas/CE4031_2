@@ -5,19 +5,23 @@ try:
     from utils.singleton import Singleton
 except:
     from src.utils.singleton import Singleton
-try:
-    from find_difference import node_substitude_cost, edge_subt_cost, get_the_difference_in_natural_language, node_match
-except:
-    from .find_difference import node_substitude_cost, edge_subt_cost, get_the_difference_in_natural_language, node_match
+from .find_difference import node_substitude_cost, edge_subt_cost, get_the_difference_in_natural_language, node_match
 from .node_utils import set_output_name, Node
 from networkx.algorithms.similarity import optimize_edit_paths
 
 class Parser(metaclass=Singleton):
+    """
+    Define an object used to store graphs and find the differences between the graphs
+    """
 
     old_graph = nx.DiGraph()
     new_graph = nx.DiGraph()
 
     def update_graphs_with_new_query_plans(self, query_plan_1, query_plan_2):
+        """
+        This function is used to update the graphs by regenearting them from 
+        new query plan
+        """
         if query_plan_1 is None:
             self.old_graph.clear()
         else:
@@ -28,9 +32,15 @@ class Parser(metaclass=Singleton):
             self.update_graph_from_query_plan(self.new_graph, query_plan_2)
      
     def get_graphs_for_visualizations(self):
+        """
+        This function is used to generate graphs that will be used for visualization
+        """
         return self.old_graph.reverse(), self.new_graph.reverse()
     
     def get_difference_between_old_and_new_graphs(self, old_query, new_query):
+        """
+        This function is used to get the difference between old and new graphs
+        """
         result = re.search('select(.*?)from', old_query, re.IGNORECASE)
         old_query_projections = result.group(1)
         old_query_projections_list = [x.strip() for x in old_query_projections.split(',')]
@@ -76,6 +86,10 @@ class Parser(metaclass=Singleton):
                 return query_difference_string + "\n" + natural_language_difference_string
 
     def update_graph_from_query_plan(self, G, query_plan):
+        """
+        This function is used to update the current graph with information 
+        from the query plan
+        """
         G.clear()
         q = queue.Queue()
         q_node = queue.Queue()

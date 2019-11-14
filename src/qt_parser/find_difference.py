@@ -9,9 +9,15 @@ new_flag = "New"
 old_flag = "Old"
 
 def node_match(node_1, node_2):
+    """
+    This function is used to test if two nodes are equal in network x
+    """
     return node_1['custom_object'] == node_2['custom_object']
 
 def node_substitude_cost(node_1, node_2):
+    """
+    This function is used to define the heuristics for node substitution in network x
+    """
     node_1_object = node_1['custom_object']
     node_2_object = node_2['custom_object']
     if node_1_object == node_2_object:
@@ -39,6 +45,9 @@ def node_substitude_cost(node_1, node_2):
     return 9223372036854775807
 
 def edge_subt_cost(old_edge_dict, new_edge_dict):
+    """
+    This function is used to define the heuristics for edge substitution in network x
+    """
     old_edge_parent_type = old_edge_dict['parent_type']
     old_edge_children_type = old_edge_dict['children_type']
     new_edge_parent_type = new_edge_dict['parent_type']
@@ -50,6 +59,9 @@ def edge_subt_cost(old_edge_dict, new_edge_dict):
 
 
 def get_graph_from_query_plan(query_plan):
+    """
+    This function is used to create a network x graph from network x
+    """
     G = nx.DiGraph()
     q = queue.Queue()
     q_node = queue.Queue()
@@ -133,6 +145,10 @@ def get_graph_from_query_plan(query_plan):
     return G
     
 def find_difference_between_two_query_plans(old_query, old_query_plan, new_query, new_query_plan):
+    """
+    This function is used to get the difference between two query plans in networkx.
+    Will output in natural language.
+    """
     result = re.search('select(.*?)from', old_query, re.IGNORECASE)
     old_query_projections = result.group(1)
     old_query_projections_list = [x.strip() for x in old_query_projections.split(',')]
@@ -180,6 +196,10 @@ def find_difference_between_two_query_plans(old_query, old_query_plan, new_query
             return query_difference_string + "" + natural_language_difference_string
 
 def get_the_difference_in_natural_language(G1, G2, node_edit_path, edge_edit_path, cost):
+    """
+    This function is used to get natural language output of all the changes between
+    two graphs in network x
+    """
     if cost == 0:
         return "Nothing has changed!"
     node_difference_strings = get_node_differences(G1, G2, node_edit_path)
@@ -188,6 +208,9 @@ def get_the_difference_in_natural_language(G1, G2, node_edit_path, edge_edit_pat
 
 
 def get_node_differences(G1, G2, node_edit_path):
+    """
+    This function is used to get the differences between two graphs using network x
+    """
     node_differences = []
     substitued_nodes = [x for x in node_edit_path if x[0] is not None and x[1] is not None]
     inserted_nodes = [x for x in node_edit_path if x[0] is None and x[1] is not None]
@@ -204,9 +227,15 @@ def get_node_differences(G1, G2, node_edit_path):
     return node_differences
 
 def find_difference_between_two_nodes(node_1, node_2, node_1_label, node_2_label):
+    """
+    This function is used to get the differences between two nodes
+    """
     return node_1.compare_differences(node_2, node_1_label, node_2_label)
 
 def get_natural_language_output_for_the_inserted_nodes(G2, inserted_nodes, substitued_nodes, join_nodes):
+    """
+    This function is used to get the natural language output for any inserted nodes
+    """
     difference_list = []
     inserted_nodes_list = []
     inserted_nodes_in_G2 = [x[1] for x in inserted_nodes]
@@ -226,17 +255,20 @@ def get_natural_language_output_for_the_inserted_nodes(G2, inserted_nodes, subst
                 successor = successors_list[0]
             if node == 0:
                 parent = None
-                differences.append(get_natural_language_ouput_between_sucessor_and_parent_for_insertion(G2, successor, parent, inserted_nodes_list))
+                differences.append(get_natural_language_ouput_between_successor_and_parent_for_insertion(G2, successor, parent, inserted_nodes_list))
                 inserted_nodes_list.clear()
             else:
                 parent = list(G2.predecessors(node))[0]
                 if parent in substitued_nodes_in_G2 or parent in join_nodes:
-                    differences.append(get_natural_language_ouput_between_sucessor_and_parent_for_insertion(G2, successor, parent, inserted_nodes_list))
+                    differences.append(get_natural_language_ouput_between_successor_and_parent_for_insertion(G2, successor, parent, inserted_nodes_list))
                     inserted_nodes_list.clear()
     return differences
 
 
 def get_natural_language_output_for_the_deleted_nodes(G1, deleted_nodes, substitued_nodes, join_nodes):
+    """
+    This function is used to get the natural language output for any deleted nodes
+    """
     difference_list = []
     deleted_nodes_list = []
     deleted_nodes_in_G1 = [x[0] for x in deleted_nodes]
@@ -254,28 +286,40 @@ def get_natural_language_output_for_the_deleted_nodes(G1, deleted_nodes, substit
                 successor = successors_list[0]
             if node == 0:
                 parent = None
-                differences.append(get_natural_language_ouput_between_sucessor_and_parent_for_deletion(G1, successor, parent, deleted_nodes_list))
+                differences.append(get_natural_language_ouput_between_successor_and_parent_for_deletion(G1, successor, parent, deleted_nodes_list))
                 deleted_nodes_list.clear()
             else:
                 parent = list(G1.predecessors(node))[0]
                 if parent in substitued_nodes_in_G1 or parent in join_nodes:
-                    differences.append(get_natural_language_ouput_between_sucessor_and_parent_for_deletion(G1, successor, parent, deleted_nodes_list))
+                    differences.append(get_natural_language_ouput_between_successor_and_parent_for_deletion(G1, successor, parent, deleted_nodes_list))
                     deleted_nodes_list.clear()
     return differences
 
 def get_natural_language_output_with_node_type_from_node_index(G, index, flag):
+    """
+    This function is used to get the natual language output with node type and its index
+    along with information that identifies whether it belongs to the old graph or the new
+    graph
+    """
     node_type = G.nodes[index]['custom_object'].node_type
     return str(node_type) + " (" + str(index) + "," + flag + ")"
 
 
 def get_natural_language_ouput_for_join_queries(G, join_node_index, flag):
+    """
+    This function is used to get the natual language output for join queries
+    """
     successors = list(G.successors(join_node_index))
     successors_with_node_type = [get_natural_language_output_with_node_type_from_node_index(G, successor, flag) for successor in successors]
     return get_natural_language_output_with_node_type_from_node_index(G, join_node_index, flag) + " joins " + get_natural_language_connection_between_objects_in_list(successors_with_node_type) + \
         " and gets inserted.\n"
     
 
-def get_natural_language_ouput_between_sucessor_and_parent_for_insertion(G2, successor, parent, inserted_nodes):
+def get_natural_language_ouput_between_successor_and_parent_for_insertion(G2, successor, parent, inserted_nodes):
+    """
+    This function is used to get the natural language output that identifies the successor and 
+    the parent of inserted nodes
+    """
     inserted_nodes_with_nodes_type = [get_natural_language_output_with_node_type_from_node_index(G2, index, new_flag) for index in inserted_nodes]
     if successor != None and parent != None:
         return str(get_natural_language_connection_between_objects_in_list(inserted_nodes_with_nodes_type)) + " gets inserted in between " + get_natural_language_output_with_node_type_from_node_index(G2, successor, new_flag) + " and " + get_natural_language_output_with_node_type_from_node_index(G2, parent, new_flag) +".\n"
@@ -285,7 +329,11 @@ def get_natural_language_ouput_between_sucessor_and_parent_for_insertion(G2, suc
         return str(get_natural_language_connection_between_objects_in_list(inserted_nodes_with_nodes_type)) + " gets inserted before " + get_natural_language_output_with_node_type_from_node_index(G2, parent, new_flag) + ".\n"
     return str(get_natural_language_connection_between_objects_in_list(inserted_nodes_with_nodes_type)) + " gets inserted after " + get_natural_language_output_with_node_type_from_node_index(G2, successor, new_flag) + ".\n"
 
-def get_natural_language_ouput_between_sucessor_and_parent_for_deletion(G1, successor, parent, deleted_nodes):
+def get_natural_language_ouput_between_successor_and_parent_for_deletion(G1, successor, parent, deleted_nodes):
+    """
+    This function is used to get the natural language output that identifies the successor and 
+    the parent of deleted nodes
+    """
     deleted_nodes_with_nodes_type = [get_natural_language_output_with_node_type_from_node_index(G1, index, old_flag) for index in deleted_nodes]
     if successor != None and parent != None:
         return str(get_natural_language_connection_between_objects_in_list(deleted_nodes_with_nodes_type)) + " gets deleted in between " + get_natural_language_output_with_node_type_from_node_index(G1, successor, old_flag) + " and " + get_natural_language_output_with_node_type_from_node_index(G1, parent, old_flag) +".\n"
@@ -295,17 +343,11 @@ def get_natural_language_ouput_between_sucessor_and_parent_for_deletion(G1, succ
         return str(get_natural_language_connection_between_objects_in_list(deleted_nodes_with_nodes_type)) + " gets deleted before " + get_natural_language_output_with_node_type_from_node_index(G1, parent, old_flag) + ".\n"
     return str(get_natural_language_connection_between_objects_in_list(deleted_nodes_with_nodes_type)) + " gets deleted after " + get_natural_language_output_with_node_type_from_node_index(G1, successor, old_flag) + ".\n"
     
-
-# def get_natural_language_difference_between_two_nodes_for_deletion(G2, node_before, node_after, deleted_nodes):
-#     prev_node_type = G2.nodes[node_before]['custom_object'].node_type
-#     deleted_nodes_type = [G2.nodes[x]['custom_object'].node_type for x in deleted_nodes]
-#     if node_after is None:
-#         return get_natural_language_connection_between_objects_in_list(deleted_nodes_type) + " get deleted after " + prev_node_type + "."
-#     else:
-#         next_node_type = G2.nodes[node_after]['custom_object'].node_type
-#         return get_natural_language_connection_between_objects_in_list(deleted_nodes_type) + " get deleted between " + str(prev_node_type) + " and " + str(next_node_type)
-
 def get_natural_language_connection_between_objects_in_list(objects):
+    """
+    This function is used to get natural language connection between objects in a list
+    so that objects inside the list will be joined with commas and ands correctly
+    """
     if len(objects) == 1:
         return objects[0]
     else:
