@@ -336,12 +336,12 @@ def get_natural_language_ouput_between_successor_and_parent_for_deletion(G1, suc
     """
     deleted_nodes_with_nodes_type = [get_natural_language_output_with_node_type_from_node_index(G1, index, old_flag) for index in deleted_nodes]
     if successor != None and parent != None:
-        return str(get_natural_language_connection_between_objects_in_list(deleted_nodes_with_nodes_type)) + " gets deleted in between " + get_natural_language_output_with_node_type_from_node_index(G1, successor, old_flag) + " and " + get_natural_language_output_with_node_type_from_node_index(G1, parent, old_flag) +".\n"
+        return str(get_natural_language_connection_between_objects_in_list(deleted_nodes_with_nodes_type)) + " that is in between " + get_natural_language_output_with_node_type_from_node_index(G1, successor, old_flag) + " and " + get_natural_language_output_with_node_type_from_node_index(G1, parent, old_flag) + " gets deleted" + ".\n"
     if successor == None and parent == None:
         return str(get_natural_language_connection_between_objects_in_list(deleted_nodes_with_nodes_type)) + " gets deleted.\n"
     if successor == None:
-        return str(get_natural_language_connection_between_objects_in_list(deleted_nodes_with_nodes_type)) + " gets deleted before " + get_natural_language_output_with_node_type_from_node_index(G1, parent, old_flag) + ".\n"
-    return str(get_natural_language_connection_between_objects_in_list(deleted_nodes_with_nodes_type)) + " gets deleted after " + get_natural_language_output_with_node_type_from_node_index(G1, successor, old_flag) + ".\n"
+        return str(get_natural_language_connection_between_objects_in_list(deleted_nodes_with_nodes_type)) + " that is before " + get_natural_language_output_with_node_type_from_node_index(G1, parent, old_flag) + " gets deleted" + ".\n"
+    return str(get_natural_language_connection_between_objects_in_list(deleted_nodes_with_nodes_type)) + " that is after " + get_natural_language_output_with_node_type_from_node_index(G1, successor, old_flag) + " gets deleted" +  ".\n"
     
 def get_natural_language_connection_between_objects_in_list(objects):
     """
