@@ -6,7 +6,7 @@ user = "postgres"
 password = "password"
 port=5433
 postgres_wrapper = PostgresWrapper()
-conn = postgres_wrapper.connect_to_postgres_db(host, DB_NAME, user, password, port=5433)
+conn = postgres_wrapper.connect_to_postgres_db(host, DB_NAME, user, password, port=port)
 
 def test_node_changes_for_table_changes_are_reflected_correctly():
     old_query = "select * from lineitem;"
