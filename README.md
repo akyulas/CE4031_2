@@ -3,27 +3,48 @@
 ## Installing Dependencies
 
 ### File Tree Structure
+
 CE/CZ4032:.
+
 ├───sample_query (The directory contains some sample query found from the Internet)
+
 ├───School Sample Query (The directory contains some sample query that were used for Neuron)
-├───sql_commands (The directory contains sql commands that were used to import data to Postgresql database.)   
+
+├───sql_commands (The directory contains sql commands that were used to import data to Postgresql database.)
+
 ├───src (The directory contains the source code)
+
 │   │   main.py (The file that needs to be run in command line.)
+
 │   ├───postgres_interface (The directory contains code related to interacting with postgres)
+
 │   │   │   postgres_wrapper.py  (The file that is used to interact with postgres)
+
 │   │   │   __init__.py        
+
 │   ├───qt_parser (The directory contains code related to parsing the query tree)
+
 │   │   │   find_difference.py  (The backend code to find the different between two query trees)
+
 │   │   │   main_parser.py (Code that will be used to connect the backend with the frontend GUI)
+
 │   │   │   node_utils.py (Code that contains the Node object and all the other codes related to Node Object)
+
 │   │   │   __init__.py  
+
 │   └───utils
-│       │   singleton.py (Code that contains a singleton class that will be used to create singleton classes)
-│       │   __init__.py
+
+│   │   │   singleton.py (Code that contains a singleton class that will be used to create singleton classes)
+
+│   │   │   __init__.py
+
 └───tests (The directory contains test cases)
-        context.py
-        test_difference_in_natural_language.py
-        __init__.py
+
+│   │   │   context.py
+
+│   │   │   test_difference_in_natural_language.py
+
+│   │   │   __init__.py
 
 ### Manual Installation
 1. [Python 3.6.6 - Python 3.7.5](https://www.python.org/downloads/) - [PSF Licence](https://docs.python.org/3/license.html)
