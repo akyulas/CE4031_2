@@ -204,6 +204,8 @@ def get_the_difference_in_natural_language(G1, G2, node_edit_path, edge_edit_pat
         return "Nothing has changed!"
     node_difference_strings = get_node_differences(G1, G2, node_edit_path)
     node_difference_strings = [node_difference_string for node_difference_string in node_difference_strings if node_difference_string != "N.A."]
+    if len(node_difference_strings) == 0:
+        return "Nothing has changed!"
     return "".join(node_difference_strings)
 
 
