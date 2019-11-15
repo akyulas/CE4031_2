@@ -22,7 +22,8 @@
 
 ## Run test cases
 1. Navigate to the test directory
-2. Run the following Python command: `python -m pytest test_difference_in_natural_language.py`
+2. Update your database information in the global variables: host, DB_NAME, user, password, port in the “test_difference_in_natural_language.py”
+3. Run the following Python command: `python -m pytest test_difference_in_natural_language.py`
 
 
 
