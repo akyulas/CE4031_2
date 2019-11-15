@@ -1,8 +1,6 @@
 # CE4031
 
-## Installing Dependencies
-
-### File Tree Structure
+## File Tree Structure
 
 CE/CZ4032:.
 
@@ -45,6 +43,8 @@ CE/CZ4032:.
 │   │   │   test_difference_in_natural_language.py
 
 │   │   │   __init__.py
+
+## Installing Dependencies
 
 ### Manual Installation
 1. [Python 3.6.6 - Python 3.7.5](https://www.python.org/downloads/) - [PSF Licence](https://docs.python.org/3/license.html)
