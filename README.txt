@@ -23,6 +23,3 @@
 ## Run test cases
 1. Navigate to the test directory
 2. Run the following Python command: `python -m pytest test_difference_in_natural_language.py`
-
-
-
