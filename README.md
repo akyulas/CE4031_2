@@ -19,6 +19,11 @@
 ## Launch GUI
 1. Navigate to the src directory
 2. Run the following Python command: `python main.py`
+3. The GUI is best viewed in full screen mode
+4. On the Homepage connect to the database by filling in the required relevant information.
+5. For e.g. Database URL: 'localhost', Database Name: 'TPC-H', Database Port: '5433' (5432 by default), User: 'postgres', Password: 'password' and click 'Submit'
+6. In the Query Page, fill in the two queries text box with SQL queries. The output will display how the query tree has evolved from query 1 to query 2.
+7. In the Query Plan Tree Page, the tree graph of the two query plans can be seen and compared.
 
 ## Run test cases
 1. Navigate to the test directory
